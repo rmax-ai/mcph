@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcph"]
+
+[project]
+name = "mcph"
+version = "0.1.0"
+description = "MCP-Hurl: declarative conformance testing DSL for Model Context Protocol servers"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15",
+    "jsonpath-ng>=1.7",
+    "jsonschema>=4.23",
+    "httpx>=0.28",
+    "anyio>=4.8",
+    "rich>=13.9",
+]
+
+[project.scripts]
+mcph = "mcph.cli:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "ruff>=0.9",
+    "mypy>=1.14",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

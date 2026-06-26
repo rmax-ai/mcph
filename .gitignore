@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+.uv/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+*.junit.xml
+*.mcph-report.json
