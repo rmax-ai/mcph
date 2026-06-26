@@ -17,7 +17,7 @@ class ProtocolEngine:
         self._next_request_id = 1
 
     async def initialize(self, init: Initialize) -> dict[str, Any]:
-        """Send initialize request, return server capabilities."""
+        """Send initialize request, return initialize result envelope payload."""
         client_info = {
             "name": init.client_name or "mcph",
             "version": init.client_version or "0.1.0",
@@ -34,7 +34,9 @@ class ProtocolEngine:
         capabilities = response.get("capabilities", {})
         if not isinstance(capabilities, dict):
             raise ValueError("Initialize response capabilities must be an object")
-        return capabilities
+        initialize_result = dict(response)
+        initialize_result["capabilities"] = capabilities
+        return initialize_result
 
     async def send_initialized(self) -> None:
         """Send notifications/initialized after successful initialize."""

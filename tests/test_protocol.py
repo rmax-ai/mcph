@@ -66,10 +66,13 @@ async def test_initialize_handshake() -> None:
         capabilities={"roots": True},
     )
 
-    capabilities = await engine.initialize(init)
+    initialize_result = await engine.initialize(init)
     await engine.send_initialized()
 
-    assert capabilities == {"tools": {"listChanged": True}}
+    assert initialize_result == {
+        "capabilities": {"tools": {"listChanged": True}},
+        "serverInfo": {"name": "Mock Server", "version": "1.0.0"},
+    }
     assert transport.sent_messages[0]["method"] == "initialize"
     assert transport.sent_messages[0]["params"]["protocolVersion"] == "2025-03-26"
     assert transport.sent_messages[0]["params"]["clientInfo"] == {

@@ -1,0 +1,34 @@
+# MCP-Hurl Conformance Suite
+# Target: Echo Server
+
+# Phase 1, transport + initialize handshake
+CONNECT stdio "python examples/echo-server.py"
+INITIALIZE protocolVersion="2025-03-26"
+CLIENT name="McphTest" version="1.0.0"
+  CAPABILITIES roots=true sampling=true
+
+ASSERT STATUS == 200
+ASSERT serverInfo.name == "McphEchoServer"
+
+# Phase 2, list tools and verify echo exists
+LIST tools
+ASSERT STATUS == 200
+ASSERT tools COUNT >= 1
+ASSERT tools[*] EXISTS name == "echo"
+
+# Phase 3, call echo and verify non-error response
+CALL "echo" { "message": "hello world" }
+ASSERT STATUS == 200
+ASSERT isError == false
+
+# Phase 4, capability-gated prompts/resources checks
+REQUIRE_CAPABILITY prompts
+LIST prompts
+ASSERT STATUS == 200
+
+REQUIRE_CAPABILITY resources
+LIST resources
+ASSERT STATUS == 200
+
+# Phase 5, clean shutdown
+SHUTDOWN

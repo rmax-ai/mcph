@@ -218,16 +218,19 @@ class Session:
         return f"Connected using {step.transport}"
 
     async def _initialize(self, step: Initialize) -> str:
-        capabilities = await self._protocol_required().initialize(step)
-        if capabilities.get("is_error") is True:
-            error_payload = capabilities.get("error")
-            self._last_response = self._to_envelope(capabilities)
+        initialize_result = await self._protocol_required().initialize(step)
+        if initialize_result.get("is_error") is True:
+            error_payload = initialize_result.get("error")
+            self._last_response = self._to_envelope(initialize_result)
             raise RuntimeError(f"Initialize failed: {error_payload}")
 
+        capabilities = initialize_result.get("capabilities", {})
+        if not isinstance(capabilities, dict):
+            raise ValueError("Initialize response capabilities must be an object")
         self._server_capabilities = capabilities
         self._last_response = {
             "jsonrpc": "2.0",
-            "result": {"capabilities": capabilities},
+            "result": initialize_result,
         }
         await self._protocol_required().send_initialized()
         return "Initialized session"
