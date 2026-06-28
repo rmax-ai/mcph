@@ -7,7 +7,7 @@ Hurl-inspired `.mcph` syntax. Custom Python async runner. Transport-agnostic (st
 ## Quick Start
 
 ```bash
-pip install mcph
+git clone https://github.com/rmax-ai/mcph && cd mcph && uv run mcph
 # or: uv tool install mcph
 ```
 

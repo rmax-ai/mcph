@@ -19,8 +19,9 @@ ASSERT isError == false
 
 SHUTDOWN`;
 
-  const quickStart = `pip install mcph
-mcph run conformance.mcph`;
+  const quickStart = `git clone https://github.com/rmax-ai/mcph
+cd mcph
+uv run mcph run examples/conformance.mcph`;
 </script>
 
 <svelte:head>
