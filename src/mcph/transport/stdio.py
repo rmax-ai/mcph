@@ -99,18 +99,14 @@ class StdioTransport(Transport):
 
         if not line:
             raise ConnectionError(
-                "MCP server closed stdout unexpectedly. "
-                f"Stderr tail: {self.stderr_tail()}"
+                f"MCP server closed stdout unexpectedly. Stderr tail: {self.stderr_tail()}"
             )
 
         decoded = line.decode("utf-8", errors="replace").rstrip("\n")
         try:
             return json.loads(decoded)
         except json.JSONDecodeError as e:
-            raise ValueError(
-                f"Invalid JSON from server: {e}\n"
-                f"Received: {decoded[:200]}"
-            ) from e
+            raise ValueError(f"Invalid JSON from server: {e}\nReceived: {decoded[:200]}") from e
 
     async def close(self) -> None:
         """Close the transport gracefully. SIGTERM → SIGKILL escalation."""

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 from textwrap import dedent
@@ -12,6 +13,13 @@ from mcph import __version__
 from mcph.cli import app
 
 runner = CliRunner()
+
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _plain(text: str) -> str:
+    """Remove terminal color codes so a help assertion cannot depend on width."""
+    return _ANSI.sub("", text)
 
 
 def _write_suite(path: Path, source: str) -> str:
@@ -26,9 +34,9 @@ def test_version_flag() -> None:
 
 
 def test_run_help_includes_env_flag() -> None:
-    result = runner.invoke(app, ["run", "--help"])
+    result = runner.invoke(app, ["run", "--help"], env={"COLUMNS": "200"})
     assert result.exit_code == 0
-    assert "--env" in result.stdout
+    assert "--env" in _plain(result.stdout)
 
 
 def test_run_missing_file_error_message() -> None:
