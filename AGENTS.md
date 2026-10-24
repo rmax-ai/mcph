@@ -38,6 +38,12 @@ examples/
   conformance.mcph    — full conformance suite
 ```
 
+## Environment Setup
+
+```bash
+uv sync --locked --group dev
+```
+
 ## Conventions
 
 - Type hints mandatory. mypy strict mode.
