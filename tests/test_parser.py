@@ -1,6 +1,5 @@
 """Tests for the MCP-Hurl parser."""
 
-
 import pytest
 
 from mcph.ast import (
@@ -29,6 +28,7 @@ from mcph.parser import parse
 
 # ── Test helpers ──────────────────────────────────────────────────────────────
 
+
 def find_step(steps: list, cls: type, index: int = 0) -> object:
     """Find the nth step of a given type in the list."""
     found = [s for s in steps if isinstance(s, cls)]
@@ -42,6 +42,7 @@ def count_steps(steps: list, cls: type) -> int:
 
 
 # ── Minimal valid file ───────────────────────────────────────────────────────
+
 
 def test_minimal_valid_file() -> None:
     result = parse("""CONNECT stdio "echo-server"
@@ -63,6 +64,7 @@ SHUTDOWN""")
 
 
 # ── CONNECT ──────────────────────────────────────────────────────────────────
+
 
 def test_connect_stdio() -> None:
     result = parse('CONNECT stdio "python -m my_server"')
@@ -92,6 +94,7 @@ def test_connect_missing_target() -> None:
 
 # ── INITIALIZE with CLIENT + CAPABILITIES ────────────────────────────────────
 
+
 def test_initialize_with_client_and_capabilities() -> None:
     result = parse("""CONNECT stdio "server"
 INITIALIZE protocolVersion="2025-03-26"
@@ -120,6 +123,7 @@ SHUTDOWN""")
 
 # ── SET and HEADER ───────────────────────────────────────────────────────────
 
+
 def test_set_variable() -> None:
     result = parse('SET myvar = "hello"')
     sv = result.steps[0]
@@ -146,11 +150,15 @@ def test_header() -> None:
 
 # ── LIST commands ────────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("cmd,cls", [
-    ("LIST tools", ListTools),
-    ("LIST prompts", ListPrompts),
-    ("LIST resources", ListResources),
-])
+
+@pytest.mark.parametrize(
+    "cmd,cls",
+    [
+        ("LIST tools", ListTools),
+        ("LIST prompts", ListPrompts),
+        ("LIST resources", ListResources),
+    ],
+)
 def test_list_commands(cmd: str, cls: type) -> None:
     result = parse(f"CONNECT stdio x\n{cmd}\nSHUTDOWN")
     assert isinstance(result.steps[1], cls)
@@ -162,6 +170,7 @@ def test_list_unknown() -> None:
 
 
 # ── CALL tool ────────────────────────────────────────────────────────────────
+
 
 def test_call_tool_simple() -> None:
     result = parse('CALL "run_sql" { "query": "SELECT 1;" }')
@@ -200,6 +209,7 @@ def test_call_tool_array_body() -> None:
 
 # ── READ resource ────────────────────────────────────────────────────────────
 
+
 def test_read_resource() -> None:
     result = parse('READ "file:///project/src/main.rs"')
     r = result.steps[0]
@@ -208,6 +218,7 @@ def test_read_resource() -> None:
 
 
 # ── GET prompt ───────────────────────────────────────────────────────────────
+
 
 def test_get_prompt() -> None:
     result = parse('GET prompt "code_review" { "language": "rust" }')
@@ -225,6 +236,7 @@ def test_get_prompt_no_args() -> None:
 
 # ── SUBSCRIBE ────────────────────────────────────────────────────────────────
 
+
 def test_subscribe() -> None:
     result = parse('SUBSCRIBE "file:///project/src/main.rs"')
     s = result.steps[0]
@@ -233,6 +245,7 @@ def test_subscribe() -> None:
 
 
 # ── LISTEN ───────────────────────────────────────────────────────────────────
+
 
 def test_listen() -> None:
     result = parse('LISTEN "notifications/tools/list_changed" TIMEOUT 5000')
@@ -250,12 +263,14 @@ def test_listen_default_timeout() -> None:
 
 # ── SHUTDOWN ─────────────────────────────────────────────────────────────────
 
+
 def test_shutdown() -> None:
     result = parse("SHUTDOWN")
     assert isinstance(result.steps[0], Shutdown)
 
 
 # ── REQUIRE_CAPABILITY ──────────────────────────────────────────────────────
+
 
 def test_require_capability() -> None:
     result = parse("REQUIRE_CAPABILITY prompts")
@@ -265,6 +280,7 @@ def test_require_capability() -> None:
 
 
 # ── ASSERT with various predicates ───────────────────────────────────────────
+
 
 def test_assert_status_equals() -> None:
     result = parse("ASSERT STATUS == 200")
@@ -329,15 +345,19 @@ def test_assert_null() -> None:
 
 # ── Fuzzy type matchers ──────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("fuzzy_str,type_name,optional", [
-    ("#string", "string", False),
-    ("#number", "number", False),
-    ("#boolean", "boolean", False),
-    ("#array", "array", False),
-    ("#object", "object", False),
-    ("##string", "string", True),
-    ("##number", "number", True),
-])
+
+@pytest.mark.parametrize(
+    "fuzzy_str,type_name,optional",
+    [
+        ("#string", "string", False),
+        ("#number", "number", False),
+        ("#boolean", "boolean", False),
+        ("#array", "array", False),
+        ("#object", "object", False),
+        ("##string", "string", True),
+        ("##number", "number", True),
+    ],
+)
 def test_fuzzy_type_matcher(fuzzy_str: str, type_name: str, optional: bool) -> None:
     result = parse(f"ASSERT result.x == {fuzzy_str}")
     a = result.steps[0]
@@ -347,6 +367,7 @@ def test_fuzzy_type_matcher(fuzzy_str: str, type_name: str, optional: bool) -> N
 
 
 # ── Structural equality ──────────────────────────────────────────────────────
+
 
 def test_assert_structural_equality() -> None:
     result = parse("""ASSERT result == {
@@ -362,6 +383,7 @@ def test_assert_structural_equality() -> None:
 
 
 # ── CAPTURE ──────────────────────────────────────────────────────────────────
+
 
 def test_capture_jsonpath() -> None:
     result = parse("CAPTURE next_cursor: result.nextCursor")
@@ -382,13 +404,14 @@ def test_capture_with_regex() -> None:
 
 
 def test_capture_with_regex_group_zero() -> None:
-    result = parse('CAPTURE x: result.text regex /hello/')
+    result = parse("CAPTURE x: result.text regex /hello/")
     c = result.steps[0]
     assert c.regex_pattern == "hello"
     assert c.regex_group == 0
 
 
 # ── Template strings ─────────────────────────────────────────────────────────
+
 
 def test_template_in_string_value() -> None:
     result = parse('SET url = "https://{{host}}/api"')
@@ -412,6 +435,7 @@ def test_template_in_json_body() -> None:
 
 # ── Comments and blank lines ─────────────────────────────────────────────────
 
+
 def test_comments_ignored() -> None:
     result = parse("""# This is a comment
 CONNECT stdio "server"
@@ -433,6 +457,7 @@ SHUTDOWN
 
 
 # ── Error cases ──────────────────────────────────────────────────────────────
+
 
 def test_missing_connect() -> None:
     # INITIALIZE without CONNECT is syntactically valid (validation at runtime)
@@ -616,6 +641,7 @@ def test_full_suite_produces_testfile() -> None:
 
 # ── Multi-line JSON with nested braces ───────────────────────────────────────
 
+
 def test_nested_json_in_call() -> None:
     result = parse("""CALL "validate" {
   "schema": {
@@ -650,6 +676,7 @@ def test_nested_json_in_assert() -> None:
 
 
 # ── Edge case: JSON with braces in strings ───────────────────────────────────
+
 
 def test_json_with_braces_in_strings() -> None:
     result = parse('CALL "t" { "pattern": "a{b}c" }')

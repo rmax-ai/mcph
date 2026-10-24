@@ -38,16 +38,16 @@ BLANK_RE = re.compile(r"^\s*$")
 
 # Predicate operators, longest-match-first
 PREDICATES = [
-    ("CONTAINS",  "CONTAINS"),
-    ("MATCHES",   "MATCHES"),
-    ("EXISTS",    "EXISTS"),
-    ("COUNT",     "COUNT"),
-    ("!=",        "!="),
-    (">=",        ">="),
-    ("<=",        "<="),
-    ("==",        "=="),
-    (">",         ">"),
-    ("<",         "<"),
+    ("CONTAINS", "CONTAINS"),
+    ("MATCHES", "MATCHES"),
+    ("EXISTS", "EXISTS"),
+    ("COUNT", "COUNT"),
+    ("!=", "!="),
+    (">=", ">="),
+    ("<=", "<="),
+    ("==", "=="),
+    (">", ">"),
+    ("<", "<"),
 ]
 
 # Regex for fuzzy type matchers: ##string, #number, etc.
@@ -154,11 +154,12 @@ def _resolve_quoted_key_value(s: str) -> tuple[str, str]:
     if eq == -1:
         raise McphParseError(f"Expected 'key = value', got: {s}")
     key = s[:eq].strip()
-    value = s[eq + 1:].strip()
+    value = s[eq + 1 :].strip()
     return key, value
 
 
 # ── Line iterator ─────────────────────────────────────────────────────────────
+
 
 class LineReader:
     """Iterate over lines with lookahead and multi-line JSON body collection."""
@@ -216,9 +217,7 @@ class LineReader:
                 break
 
         if open_idx == -1:
-            raise McphParseError(
-                "Expected '{' or '[' to start JSON body", start_ln, start_line
-            )
+            raise McphParseError("Expected '{' or '[' to start JSON body", start_ln, start_line)
 
         # Count braces/brackets to find the matching closing one
         depth = 0
@@ -266,6 +265,7 @@ def _parse_value_templates(obj: Any) -> Any:
 
 
 # ── Parser ────────────────────────────────────────────────────────────────────
+
 
 class Parser:
     """Recursive descent parser for .mcph files."""
@@ -326,17 +326,11 @@ class Parser:
             return self._parse_capture(rest, ln)
         elif kw == "CLIENT":
             # CLIENT should only appear as a sub-block of INITIALIZE
-            raise McphParseError(
-                "CLIENT must appear inside an INITIALIZE block", ln, line
-            )
+            raise McphParseError("CLIENT must appear inside an INITIALIZE block", ln, line)
         elif kw == "CAPABILITIES":
-            raise McphParseError(
-                "CAPABILITIES must appear inside a CLIENT block", ln, line
-            )
+            raise McphParseError("CAPABILITIES must appear inside a CLIENT block", ln, line)
         else:
-            raise McphParseError(
-                f"Unknown keyword: {keyword}", ln, line
-            )
+            raise McphParseError(f"Unknown keyword: {keyword}", ln, line)
 
     # ── Individual parsers ────────────────────────────────────────────────
 
@@ -345,7 +339,7 @@ class Parser:
         parts = rest.split(maxsplit=1)
         if len(parts) < 2:
             raise McphParseError(
-                "CONNECT requires transport and target, e.g. CONNECT stdio \"cmd\"",
+                'CONNECT requires transport and target, e.g. CONNECT stdio "cmd"',
                 ln,
             )
         transport = parts[0].lower()
@@ -376,7 +370,7 @@ class Parser:
             peek_line, _peek_ln = peeked
             if peek_line.upper().startswith("CLIENT"):
                 self._r.next()  # consume CLIENT line
-                rest_client = peek_line[len("CLIENT"):].strip()
+                rest_client = peek_line[len("CLIENT") :].strip()
                 # Parse name="..." version="..."
                 # Simple key=value parsing
                 if rest_client:
@@ -390,7 +384,7 @@ class Parser:
                     p2_line, _p2_ln = peeked2
                     if p2_line.upper().startswith("CAPABILITIES"):
                         self._r.next()
-                        caps_str = p2_line[len("CAPABILITIES"):].strip()
+                        caps_str = p2_line[len("CAPABILITIES") :].strip()
                         capabilities = self._parse_capabilities(caps_str)
 
         return Initialize(
@@ -420,9 +414,7 @@ class Parser:
                 caps[kv[0]] = kv[1].lower() == "true"
         return caps
 
-    def _collect_json_body_ext(
-        self, after_name: str, full_line: str, ln: int
-    ) -> str:
+    def _collect_json_body_ext(self, after_name: str, full_line: str, ln: int) -> str:
         """Collect a JSON body, checking current line then next line."""
         # Check current line remainder for { or [
         if "{" in after_name or "[" in after_name:
@@ -474,12 +466,12 @@ class Parser:
         name_match = re.match(r'"([^"]*)"', rest)
         if not name_match:
             raise McphParseError(
-                "CALL requires a quoted tool name, e.g. CALL \"my_tool\"",
+                'CALL requires a quoted tool name, e.g. CALL "my_tool"',
                 ln,
                 full_line,
             )
         name = name_match.group(1)
-        after_name = rest[name_match.end():].strip()
+        after_name = rest[name_match.end() :].strip()
 
         # Collect JSON body — check current line, then next line
         body_text = self._collect_json_body_ext(after_name, full_line, ln)
@@ -487,14 +479,10 @@ class Parser:
         try:
             arguments = _json.loads(body_text)
         except _json.JSONDecodeError as e:
-            raise McphParseError(
-                f"Invalid JSON in CALL body: {e}", ln, body_text
-            ) from e
+            raise McphParseError(f"Invalid JSON in CALL body: {e}", ln, body_text) from e
 
         if not isinstance(arguments, dict):
-            raise McphParseError(
-                "CALL body must be a JSON object", ln, body_text
-            )
+            raise McphParseError("CALL body must be a JSON object", ln, body_text)
 
         # Parse templates in argument values
         arguments = _parse_value_templates(arguments)
@@ -509,32 +497,24 @@ class Parser:
         """GET prompt "name" { json_args }"""
         # "prompt" keyword then name then optional JSON
         if not rest.lower().startswith("prompt"):
-            raise McphParseError(
-                "GET expects 'prompt', e.g. GET prompt \"name\"", ln, full_line
-            )
-        rest = rest[len("prompt"):].strip()
+            raise McphParseError("GET expects 'prompt', e.g. GET prompt \"name\"", ln, full_line)
+        rest = rest[len("prompt") :].strip()
 
         name_match = re.match(r'"([^"]*)"', rest)
         if not name_match:
-            raise McphParseError(
-                "GET prompt requires a quoted name", ln, full_line
-            )
+            raise McphParseError("GET prompt requires a quoted name", ln, full_line)
         name = name_match.group(1)
-        after_name = rest[name_match.end():].strip()
+        after_name = rest[name_match.end() :].strip()
 
         body_text = self._collect_json_body_ext(after_name, full_line, ln)
 
         try:
             arguments = _json.loads(body_text)
         except _json.JSONDecodeError as e:
-            raise McphParseError(
-                f"Invalid JSON in GET prompt body: {e}", ln, body_text
-            ) from e
+            raise McphParseError(f"Invalid JSON in GET prompt body: {e}", ln, body_text) from e
 
         if not isinstance(arguments, dict):
-            raise McphParseError(
-                "GET prompt body must be a JSON object", ln, body_text
-            )
+            raise McphParseError("GET prompt body must be a JSON object", ln, body_text)
 
         arguments = _parse_value_templates(arguments)
 
@@ -549,21 +529,17 @@ class Parser:
         # Extract quoted notification name
         name_match = re.match(r'"([^"]*)"', rest)
         if not name_match:
-            raise McphParseError(
-                "LISTEN requires a quoted notification name", ln
-            )
+            raise McphParseError("LISTEN requires a quoted notification name", ln)
         notification = name_match.group(1)
-        after = rest[name_match.end():].strip()
+        after = rest[name_match.end() :].strip()
 
         timeout_ms = 5000  # default
         if after.upper().startswith("TIMEOUT"):
-            timeout_str = after[len("TIMEOUT"):].strip()
+            timeout_str = after[len("TIMEOUT") :].strip()
             try:
                 timeout_ms = int(timeout_str)
             except ValueError:
-                raise McphParseError(
-                    f"Invalid TIMEOUT value: {timeout_str}", ln
-                ) from None
+                raise McphParseError(f"Invalid TIMEOUT value: {timeout_str}", ln) from None
 
         return Listen(notification=notification, timeout_ms=timeout_ms, line_number=ln)
 
@@ -587,7 +563,7 @@ class Parser:
                 break
             if idx != -1:
                 query = rest[:idx].strip()
-                value_str = rest[idx + len(p_text) + 2:].strip()
+                value_str = rest[idx + len(p_text) + 2 :].strip()
                 op_name = p_name
                 break
         else:
@@ -633,18 +609,20 @@ class Parser:
                 ln,
             )
         variable = rest[:colon].strip()
-        after = rest[colon + 1:].strip()
+        after = rest[colon + 1 :].strip()
 
         # Check for regex suffix
-        regex_match = re.search(r'\s+regex\s+/(.+?)/(\s+\d+)?\s*$', after)
+        regex_match = re.search(r"\s+regex\s+/(.+?)/(\s+\d+)?\s*$", after)
         if regex_match:
-            query = after[:regex_match.start()].strip()
+            query = after[: regex_match.start()].strip()
             pattern = regex_match.group(1)
             group_str = regex_match.group(2)
             group = int(group_str.strip()) if group_str else 0
             return Capture(
-                variable=variable, query=query,
-                regex_pattern=pattern, regex_group=group,
+                variable=variable,
+                query=query,
+                regex_pattern=pattern,
+                regex_group=group,
                 line_number=ln,
             )
 
@@ -652,6 +630,7 @@ class Parser:
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
+
 
 def parse(text: str) -> TestFile:
     """Parse a .mcph file string into a TestFile AST.
